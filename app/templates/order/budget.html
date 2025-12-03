@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+
+{% block title %}管理预算分配{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>管理预算分配</h2>
+        <a href="{{ url_for('order.view_order', order_id=order.id) }}" class="btn btn-secondary">返回订单</a>
+    </div>
+
+    <!-- 订单信息 -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5>订单信息</h5>
+            <p><strong>订单编号:</strong> {{ order.order_code }}</p>
+            <p><strong>供应商:</strong> {{ order.supplier }}</p>
+            <p><strong>总金额:</strong> ¥{{ "%.2f"|format(order.total_amount) }}</p>
+        </div>
+    </div>
+
+    <!-- 预算分配表单 -->
+    <div class="card">
+        <div class="card-body">
+            <form method="post" action="{{ url_for('order.manage_budget', order_id=order.id) }}" id="budgetForm">
+                <div id="budgetAllocations">
+                    {% if budget_allocations %}
+                        {% for allocation in budget_allocations %}
+                        <div class="row mb-3 budget-row">
+                            <div class="col-md-6">
+                                <label class="form-label">预算Code</label>
+                                <input type="text" class="form-control" name="budget_code[]" 
+                                       value="{{ allocation.budget_code }}" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">分配比例 (%)</label>
+                                <input type="number" class="form-control percentage-input" name="allocation_percentage[]" 
+                                       value="{{ allocation.allocation_percentage }}" 
+                                       min="0.01" max="100" step="0.01" required>
+                            </div>
+                            <div class="col-md-2 d-flex align-items-end">
+                                <button type="button" class="btn btn-danger remove-budget">删除</button>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="row mb-3 budget-row">
+                            <div class="col-md-6">
+                                <label class="form-label">预算Code</label>
+                                <input type="text" class="form-control" name="budget_code[]" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">分配比例 (%)</label>
+                                <input type="number" class="form-control percentage-input" name="allocation_percentage[]" 
+                                       value="100" min="0.01" max="100" step="0.01" required>
+                            </div>
+                            <div class="col-md-2 d-flex align-items-end">
+                                <button type="button" class="btn btn-danger remove-budget">删除</button>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="mb-3">
+                    <button type="button" class="btn btn-success" id="addBudget">添加预算Code</button>
+                </div>
+
+                <div class="alert alert-info">
+                    <strong>提示:</strong> 所有预算Code的分配比例总和必须等于100%
+                    <div class="mt-2">
+                        <strong>当前总和:</strong> <span id="totalPercentage">0.00</span>%
+                    </div>
+                </div>
+
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                    <button type="submit" class="btn btn-primary">保存预算分配</button>
+                    <a href="{{ url_for('order.view_order', order_id=order.id) }}" class="btn btn-secondary">取消</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const budgetAllocations = document.getElementById('budgetAllocations');
+    const addBudgetBtn = document.getElementById('addBudget');
+    const totalPercentageSpan = document.getElementById('totalPercentage');
+
+    // 添加预算Code
+    addBudgetBtn.addEventListener('click', function() {
+        const newRow = document.createElement('div');
+        newRow.className = 'row mb-3 budget-row';
+        newRow.innerHTML = `
+            <div class="col-md-6">
+                <label class="form-label">预算Code</label>
+                <input type="text" class="form-control" name="budget_code[]" required>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">分配比例 (%)</label>
+                <input type="number" class="form-control percentage-input" name="allocation_percentage[]" 
+                       value="0" min="0.01" max="100" step="0.01" required>
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="button" class="btn btn-danger remove-budget">删除</button>
+            </div>
+        `;
+        budgetAllocations.appendChild(newRow);
+        updateTotal();
+    });
+
+    // 删除预算Code
+    budgetAllocations.addEventListener('click', function(e) {
+        if (e.target.classList.contains('remove-budget')) {
+            const rows = budgetAllocations.querySelectorAll('.budget-row');
+            if (rows.length > 1) {
+                e.target.closest('.budget-row').remove();
+                updateTotal();
+            } else {
+                alert('至少需要保留一个预算分配');
+            }
+        }
+    });
+
+    // 更新总和
+    function updateTotal() {
+        const inputs = document.querySelectorAll('.percentage-input');
+        let total = 0;
+        inputs.forEach(input => {
+            const value = parseFloat(input.value) || 0;
+            total += value;
+        });
+        totalPercentageSpan.textContent = total.toFixed(2);
+        
+        // 如果总和不等于100，显示警告
+        if (Math.abs(total - 100) > 0.01) {
+            totalPercentageSpan.classList.add('text-danger');
+            totalPercentageSpan.classList.remove('text-success');
+        } else {
+            totalPercentageSpan.classList.add('text-success');
+            totalPercentageSpan.classList.remove('text-danger');
+        }
+    }
+
+    // 监听输入变化
+    budgetAllocations.addEventListener('input', function(e) {
+        if (e.target.classList.contains('percentage-input')) {
+            updateTotal();
+        }
+    });
+
+    // 初始化总和
+    updateTotal();
+
+    // 表单提交验证
+    document.getElementById('budgetForm').addEventListener('submit', function(e) {
+        const inputs = document.querySelectorAll('.percentage-input');
+        let total = 0;
+        inputs.forEach(input => {
+            total += parseFloat(input.value) || 0;
+        });
+        
+        if (Math.abs(total - 100) > 0.01) {
+            e.preventDefault();
+            alert('预算分配比例总和必须等于100%，当前为' + total.toFixed(2) + '%');
+        }
+    });
+});
+</script>
+{% endblock %}

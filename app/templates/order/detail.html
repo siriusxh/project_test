@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+
+{% block title %}订单详情{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>订单详情</h2>
+        <div>
+            <a href="{{ url_for('order.edit_order', order_id=order.id) }}" class="btn btn-warning">编辑订单</a>
+            <a href="{{ url_for('order.manage_budget', order_id=order.id) }}" class="btn btn-success">管理预算</a>
+            <a href="{{ url_for('order.list_orders') }}" class="btn btn-secondary">返回列表</a>
+        </div>
+    </div>
+
+    <!-- 订单基本信息 -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5>基本信息</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <p><strong>订单编号:</strong> {{ order.order_code }}</p>
+                    <p><strong>供应商:</strong> {{ order.supplier }}</p>
+                    <p><strong>总金额:</strong> ¥{{ "%.2f"|format(order.total_amount) }}</p>
+                </div>
+                <div class="col-md-6">
+                    <p><strong>状态:</strong> 
+                        {% if order.status == 'pending' %}
+                            <span class="badge bg-warning">待处理</span>
+                        {% elif order.status == 'confirmed' %}
+                            <span class="badge bg-info">已确认</span>
+                        {% elif order.status == 'completed' %}
+                            <span class="badge bg-success">已完成</span>
+                        {% elif order.status == 'cancelled' %}
+                            <span class="badge bg-danger">已取消</span>
+                        {% else %}
+                            <span class="badge bg-secondary">{{ order.status }}</span>
+                        {% endif %}
+                    </p>
+                    <p><strong>创建时间:</strong> {{ order.created_at.strftime('%Y-%m-%d %H:%M:%S') if order.created_at else '' }}</p>
+                    <p><strong>更新时间:</strong> {{ order.updated_at.strftime('%Y-%m-%d %H:%M:%S') if order.updated_at else '' }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 关联需求信息 -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5>关联需求</h5>
+        </div>
+        <div class="card-body">
+            <p><strong>需求编码:</strong> 
+                <a href="{{ url_for('requirement.view_requirement', requirement_id=requirement.id) }}">
+                    {{ requirement.requirement_code }}
+                </a>
+            </p>
+            <p><strong>Jira Case:</strong> {{ requirement.jira_case }}</p>
+            <p><strong>描述:</strong> {{ requirement.description or '无' }}</p>
+        </div>
+    </div>
+
+    <!-- 订单项明细 -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5>订单项明细</h5>
+        </div>
+        <div class="card-body">
+            {% if items %}
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>SKU编码</th>
+                            <th>SKU名称</th>
+                            <th>数量</th>
+                            <th>单价</th>
+                            <th>小计</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in items %}
+                        <tr>
+                            <td>{{ item.sku.sku_code }}</td>
+                            <td>{{ item.sku.name }}</td>
+                            <td>{{ item.quantity }}</td>
+                            <td>¥{{ "%.2f"|format(item.unit_price) }}</td>
+                            <td>¥{{ "%.2f"|format(item.subtotal) }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <th colspan="4" class="text-end">总计:</th>
+                            <th>¥{{ "%.2f"|format(order.total_amount) }}</th>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-muted">暂无订单项</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- 预算分配 -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5>预算分配</h5>
+        </div>
+        <div class="card-body">
+            {% if budget_allocations %}
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>预算Code</th>
+                            <th>分配比例</th>
+                            <th>分配金额</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for allocation in budget_allocations %}
+                        <tr>
+                            <td>{{ allocation.budget_code }}</td>
+                            <td>{{ "%.2f"|format(allocation.allocation_percentage) }}%</td>
+                            <td>¥{{ "%.2f"|format(allocation.amount) }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <th>总计:</th>
+                            <th>{{ "%.2f"|format(budget_allocations|sum(attribute='allocation_percentage')) }}%</th>
+                            <th>¥{{ "%.2f"|format(budget_allocations|sum(attribute='amount')) }}</th>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-muted">暂无预算分配。<a href="{{ url_for('order.manage_budget', order_id=order.id) }}">添加预算分配</a></p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

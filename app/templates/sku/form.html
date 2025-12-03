@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+
+{% block title %}{{ '编辑' if sku else '新建' }}SKU - 服务器订单管理系统{% endblock %}
+
+{% block content %}
+<div class="row mt-4">
+    <div class="col-md-8 offset-md-2">
+        <div class="card">
+            <div class="card-header">
+                <h3>{{ '编辑' if sku else '新建' }}SKU</h3>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('sku.update_sku', sku_id=sku.id) if sku else url_for('sku.create_sku') }}">
+                    <div class="mb-3">
+                        <label for="sku_code" class="form-label">SKU编码 <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="sku_code" name="sku_code" 
+                               value="{{ sku.sku_code if sku else (form_data.sku_code if form_data else '') }}" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="name" class="form-label">名称 <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="name" name="name" 
+                               value="{{ sku.name if sku else (form_data.name if form_data else '') }}" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="unit_price" class="form-label">单价 <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text">¥</span>
+                            <input type="number" class="form-control" id="unit_price" name="unit_price" 
+                                   step="0.01" min="0.01"
+                                   value="{{ sku.unit_price if sku else (form_data.unit_price if form_data else '') }}" required>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="supplier" class="form-label">供应商 <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="supplier" name="supplier" 
+                               value="{{ sku.supplier if sku else (form_data.supplier if form_data else '') }}" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="category" class="form-label">类别</label>
+                        <input type="text" class="form-control" id="category" name="category" 
+                               value="{{ sku.category if sku else (form_data.category if form_data else '') }}">
+                    </div>
+
+                    {% if sku %}
+                    <div class="mb-3">
+                        <label for="changed_by" class="form-label">修改人</label>
+                        <input type="text" class="form-control" id="changed_by" name="changed_by" 
+                               placeholder="可选，用于记录价格变更历史">
+                    </div>
+                    {% endif %}
+
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('sku.list_skus') }}" class="btn btn-secondary">取消</a>
+                        <button type="submit" class="btn btn-primary">{{ '更新' if sku else '创建' }}</button>
+                    </div>
+                </form>
+
+                {% if sku and price_history %}
+                <hr class="my-4">
+                <h5>价格变更历史</h5>
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>变更时间</th>
+                                <th>旧价格</th>
+                                <th>新价格</th>
+                                <th>修改人</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for history in price_history %}
+                            <tr>
+                                <td>{{ history.changed_at.strftime('%Y-%m-%d %H:%M:%S') if history.changed_at else '-' }}</td>
+                                <td>¥{{ "%.2f"|format(history.old_price) }}</td>
+                                <td>¥{{ "%.2f"|format(history.new_price) }}</td>
+                                <td>{{ history.changed_by or '-' }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

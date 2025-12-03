@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block title %}创建订单{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>从需求创建订单</h2>
+        <a href="{{ url_for('order.list_orders') }}" class="btn btn-secondary">返回列表</a>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <form method="post" action="{{ url_for('order.create_order') }}">
+                <div class="mb-3">
+                    <label for="requirement_id" class="form-label">选择需求 <span class="text-danger">*</span></label>
+                    <select class="form-select" id="requirement_id" name="requirement_id" required>
+                        <option value="">请选择需求</option>
+                        {% for req in requirements %}
+                        <option value="{{ req.id }}">
+                            {{ req.requirement_code }} - {{ req.jira_case }} 
+                            {% if req.description %}({{ req.description[:50] }}...){% endif %}
+                        </option>
+                        {% endfor %}
+                    </select>
+                    <div class="form-text">
+                        系统将根据需求中的配置项自动按供应商拆分订单
+                    </div>
+                </div>
+
+                <div class="alert alert-info">
+                    <strong>说明:</strong>
+                    <ul class="mb-0">
+                        <li>系统会自动从选定的需求中提取所有配置项</li>
+                        <li>根据SKU的供应商信息，将配置项拆分到不同的订单</li>
+                        <li>每个供应商生成一个独立的EPS订单</li>
+                        <li>订单创建后，可以为每个订单分配预算Code</li>
+                    </ul>
+                </div>
+
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                    <button type="submit" class="btn btn-primary">创建订单</button>
+                    <a href="{{ url_for('order.list_orders') }}" class="btn btn-secondary">取消</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

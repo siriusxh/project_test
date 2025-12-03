@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block title %}编辑订单{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>编辑订单</h2>
+        <a href="{{ url_for('order.view_order', order_id=order.id) }}" class="btn btn-secondary">返回订单</a>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <form method="post" action="{{ url_for('order.edit_order', order_id=order.id) }}">
+                <div class="mb-3">
+                    <label for="order_code" class="form-label">订单编号 <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="order_code" name="order_code" 
+                           value="{{ order.order_code }}" required>
+                </div>
+
+                <div class="mb-3">
+                    <label for="supplier" class="form-label">供应商 <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="supplier" name="supplier" 
+                           value="{{ order.supplier }}" required>
+                </div>
+
+                <div class="mb-3">
+                    <label for="status" class="form-label">状态</label>
+                    <select class="form-select" id="status" name="status">
+                        <option value="pending" {% if order.status == 'pending' %}selected{% endif %}>待处理</option>
+                        <option value="confirmed" {% if order.status == 'confirmed' %}selected{% endif %}>已确认</option>
+                        <option value="completed" {% if order.status == 'completed' %}selected{% endif %}>已完成</option>
+                        <option value="cancelled" {% if order.status == 'cancelled' %}selected{% endif %}>已取消</option>
+                    </select>
+                </div>
+
+                <div class="alert alert-warning">
+                    <strong>注意:</strong> 订单总金额由订单项自动计算，不能直接修改。如需修改订单内容，请重新创建订单。
+                </div>
+
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                    <button type="submit" class="btn btn-primary">保存修改</button>
+                    <a href="{{ url_for('order.view_order', order_id=order.id) }}" class="btn btn-secondary">取消</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}{{ '编辑需求' if requirement else '创建需求' }} - 服务器订单管理系统{% endblock %}
+
+{% block content %}
+<div class="row mt-4">
+    <div class="col-md-8 offset-md-2">
+        <div class="card">
+            <div class="card-header">
+                <h3>{{ '编辑需求' if requirement else '创建需求' }}</h3>
+            </div>
+            <div class="card-body">
+                <form method="post" action="{{ url_for('requirement.update_requirement', requirement_id=requirement.id) if requirement else url_for('requirement.create_requirement') }}">
+                    {% if requirement %}
+                    <input type="hidden" name="_method" value="PUT">
+                    {% endif %}
+                    
+                    <div class="mb-3">
+                        <label for="requirement_code" class="form-label">需求编码 <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="requirement_code" name="requirement_code" 
+                               value="{{ requirement.requirement_code if requirement else (form_data.requirement_code if form_data else '') }}" 
+                               required>
+                        <div class="form-text">唯一标识该需求的编码</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="jira_case" class="form-label">Jira Case <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="jira_case" name="jira_case" 
+                               value="{{ requirement.jira_case if requirement else (form_data.jira_case if form_data else '') }}" 
+                               required>
+                        <div class="form-text">关联的Jira工单编号</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="description" class="form-label">描述</label>
+                        <textarea class="form-control" id="description" name="description" rows="4">{{ requirement.description if requirement else (form_data.description if form_data else '') }}</textarea>
+                        <div class="form-text">需求的详细描述</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="status" class="form-label">状态</label>
+                        <select class="form-select" id="status" name="status">
+                            <option value="draft" {% if (requirement and requirement.status == 'draft') or (form_data and form_data.status == 'draft') or not requirement %}selected{% endif %}>草稿</option>
+                            <option value="approved" {% if (requirement and requirement.status == 'approved') or (form_data and form_data.status == 'approved') %}selected{% endif %}>已批准</option>
+                            <option value="ordered" {% if (requirement and requirement.status == 'ordered') or (form_data and form_data.status == 'ordered') %}selected{% endif %}>已下单</option>
+                        </select>
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('requirement.list_requirements') }}" class="btn btn-secondary">取消</a>
+                        <button type="submit" class="btn btn-primary">{{ '更新' if requirement else '创建' }}</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

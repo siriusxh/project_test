@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block title %}需求列表 - 服务器订单管理系统{% endblock %}
+
+{% block content %}
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2>需求列表</h2>
+            <a href="{{ url_for('requirement.new_requirement') }}" class="btn btn-primary">创建新需求</a>
+        </div>
+
+        <!-- 筛选表单 -->
+        <div class="card mb-3">
+            <div class="card-body">
+                <form method="get" class="row g-3">
+                    <div class="col-md-3">
+                        <label for="requirement_code" class="form-label">需求编码</label>
+                        <input type="text" class="form-control" id="requirement_code" name="requirement_code" 
+                               value="{{ request.args.get('requirement_code', '') }}">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="jira_case" class="form-label">Jira Case</label>
+                        <input type="text" class="form-control" id="jira_case" name="jira_case" 
+                               value="{{ request.args.get('jira_case', '') }}">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="status" class="form-label">状态</label>
+                        <select class="form-select" id="status" name="status">
+                            <option value="">全部</option>
+                            <option value="draft" {% if request.args.get('status') == 'draft' %}selected{% endif %}>草稿</option>
+                            <option value="approved" {% if request.args.get('status') == 'approved' %}selected{% endif %}>已批准</option>
+                            <option value="ordered" {% if request.args.get('status') == 'ordered' %}selected{% endif %}>已下单</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3 d-flex align-items-end">
+                        <button type="submit" class="btn btn-secondary me-2">筛选</button>
+                        <a href="{{ url_for('requirement.list_requirements') }}" class="btn btn-outline-secondary">清除</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- 需求列表 -->
+        <div class="card">
+            <div class="card-body">
+                {% if requirements %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>需求编码</th>
+                                <th>Jira Case</th>
+                                <th>描述</th>
+                                <th>状态</th>
+                                <th>配置数量</th>
+                                <th>创建时间</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for requirement in requirements %}
+                            <tr>
+                                <td>{{ requirement.requirement_code }}</td>
+                                <td>{{ requirement.jira_case }}</td>
+                                <td>{{ requirement.description[:50] }}{% if requirement.description and requirement.description|length > 50 %}...{% endif %}</td>
+                                <td>
+                                    <span class="badge bg-{{ 'secondary' if requirement.status == 'draft' else 'success' if requirement.status == 'approved' else 'primary' }}">
+                                        {{ requirement.status }}
+                                    </span>
+                                </td>
+                                <td>{{ requirement.configurations.count() }}</td>
+                                <td>{{ requirement.created_at.strftime('%Y-%m-%d %H:%M') if requirement.created_at else '' }}</td>
+                                <td>
+                                    <a href="{{ url_for('requirement.view_requirement', requirement_id=requirement.id) }}" 
+                                       class="btn btn-sm btn-info">查看</a>
+                                    <a href="{{ url_for('requirement.edit_requirement', requirement_id=requirement.id) }}" 
+                                       class="btn btn-sm btn-warning">编辑</a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="alert alert-info">
+                    暂无需求记录。<a href="{{ url_for('requirement.new_requirement') }}">创建第一个需求</a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
